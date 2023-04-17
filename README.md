@@ -1,1 +1,1 @@
-Docs for https://www.npmjs.com/package/cath
+Documentation for https://www.npmjs.com/package/cath
