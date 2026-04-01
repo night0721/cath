@@ -2,8 +2,6 @@ import { config } from "../";
 import { CodeData } from "./codeclient.interface";
 import { CathError } from "../Error/CathError";
 /**
- * @name CodeClient
- * @kind constructor
  */
 export class CodeClient {
   constructor() { }

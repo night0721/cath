@@ -16,6 +16,7 @@ export { URLClient, URLData } from "./URLClient";
 export {
   GiveawaysClient,
   GiveawaySchema,
+  InviteSchema,
   GiveawaysClientOptions,
   DefaultGiveawayMessages,
 } from "./GiveawaysClient";
@@ -27,7 +28,7 @@ export { bool } from "./functions/bool";
 export { randint } from "./functions/randint";
 export { timer } from "./functions/timer";
 export { selectRandom } from "./functions/selectRandom";
-export { parseMS, parseString } from "./functions/ms";
+export { parseMS, parseString, msOptions } from "./functions/ms";
 export { confirmation } from "./functions/confirmation";
 export { HHMMSS } from "./functions/HHMMSS";
 export { formatUpper } from "./functions/formatUpper";

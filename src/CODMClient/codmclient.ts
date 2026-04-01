@@ -2,8 +2,6 @@ import { CathError } from "../Error/CathError";
 import { config } from "../";
 import { PerkData, ScorestreakData } from "./codmclient.interface";
 /**
- * @name APIClient
- * @kind constructor
  * @param {String} key Authorization Key for API (Only for CODM commands)
  */
 export class CODMClient {

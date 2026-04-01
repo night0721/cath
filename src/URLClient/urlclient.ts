@@ -2,8 +2,6 @@ import { config } from "../";
 import { URLData } from "./urlclient.interface";
 import { CathError } from "../Error/CathError";
 /**
- * @name URLClient
- * @kind constructor
  */
 export class URLClient {
   constructor() { }

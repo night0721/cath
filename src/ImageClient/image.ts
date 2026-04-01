@@ -1,10 +1,8 @@
 import { config } from "../";
 /**
- * @name ImageClient
- * @kind constructor
  */
 export class ImageClient {
-  constructor() {}
+  constructor() { }
   private endpoint(end: string, ava: string, ava1?: string, ava2?: string) {
     if (ava && ava1 && !ava2)
       return `${config.api}/api/v1/image/${end}?image=${ava}&image2=${ava1}`;

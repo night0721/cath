@@ -86,9 +86,7 @@ export class GiveawaysClient {
   public GiveawayMessages: DefaultGiveawayMessages;
   public MongooseConnectionURI: string;
   /**
-   * @name GiveawaysClient
-   * @kind constructor
-   * @param {GiveawaysClientOptions}options
+   * @param {GiveawaysClientOptions} options
    */
 
   constructor(options: GiveawaysClientOptions) {

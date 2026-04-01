@@ -12,13 +12,13 @@ If you like this package, feel free to <img src = "https://discord.com/assets/14
 
 Download from npm
 
-```powershell
+```sh
 npm install cath
 ```
 
 Download from yarn
 
-```powershell
+```sh
 yarn add cath
 ```
 

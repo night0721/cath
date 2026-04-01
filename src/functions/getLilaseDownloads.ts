@@ -1,6 +1,5 @@
 /**
- * @name getLilaseDownloads
- * @description Get the number of downloads
+ * Get the number of downloads
  */
 export async function getLilaseDownloads(): Promise<number> {
   const response = await fetch(
