@@ -1,6 +1,10 @@
 {
   "compilerOptions": {
-    "lib": ["ESNext"],
+    "lib": [
+      "ESNext",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "module": "commonjs",
     "moduleResolution": "node",
     "target": "ESNext",
@@ -15,6 +19,10 @@
     "skipDefaultLibCheck": true,
     "resolveJsonModule": true
   },
-  "include": ["./src"],
-  "exclude": ["./node_modules"]
+  "include": [
+    "./src"
+  ],
+  "exclude": [
+    "./node_modules"
+  ]
 }
