@@ -1,4 +1,3 @@
-import axios from "axios";
 import { config } from "../";
 import { URLData } from "./urlclient.interface";
 import { CathError } from "../Error/CathError";
@@ -7,27 +6,29 @@ import { CathError } from "../Error/CathError";
  * @kind constructor
  */
 export class URLClient {
-  constructor() {}
+  constructor() { }
   /**
    * Sends the link of the URL
    * @return {Promise<URLData>}
-   * @param {String} shortName
-   * @param {String} targetURL
+   * @param {String} url
+   * @param {String} password
    */
   public async createShortURL(
-    shortName: string,
-    targetURL: string
+    url: string,
+    password?: string
   ): Promise<URLData> {
-    if (!shortName) throw new CathError("Missing 'shortName' property");
-    if (!targetURL) throw new CathError("Missing 'targetURL' property");
-    const data = await axios
-      .post(`${config.url}`, {
-        shortUrl: shortName,
-        fullUrl: targetURL,
-      })
-      .then(res => res.data);
-    if (data?.name) {
-      return data?.name;
+    if (!url) throw new CathError("Missing 'url' property");
+    const response = await fetch(`${config.bin}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        url,
+        password,
+      }),
+    });
+    const data = await response.json() as URLData;
+    if (data?.id) {
+      return data;
     }
   }
 }
