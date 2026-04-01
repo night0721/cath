@@ -1,12 +1,10 @@
 const config: ConfigURLS = {
-  api: "https://api.night0721.me",
-  code: "https://cdn.night0721.me/api/paste",
-  url: "https://cdn.night0721.me/api/url",
+  api: "https://api.night0721.xyz",
+  bin: "https://nxc.night0721.xyz"
 };
 
 interface ConfigURLS {
   api: string;
-  code: string;
-  url: string;
+  bin: string;
 }
 export { config, ConfigURLS };

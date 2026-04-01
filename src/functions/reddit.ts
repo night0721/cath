@@ -1,13 +1,11 @@
-import axios from "axios";
 import { CathError } from "../Error/CathError";
 /**
  * Sends an embed of reddit
  */
 export async function getreddit(sub: string): Promise<RedditObject> {
   if (!sub) throw new CathError("Missing Subreddit");
-  const content = await axios
-    .get(`https://www.reddit.com/r/${sub}/random/.json`)
-    .then(res => res.data);
+  const response = await fetch(`https://www.reddit.com/r/${sub}/random/.json`);
+  const content = await response.json();
   let permalink = content[0].data.children[0].data.permalink;
   let memeURL = `https://reddit.com${permalink}`;
   let memeImage = content[0].data.children[0].data.url;

@@ -1,4 +1,3 @@
-import axios from "axios";
 import { config } from "../";
 import { CodeData } from "./codeclient.interface";
 import { CathError } from "../Error/CathError";
@@ -7,24 +6,26 @@ import { CathError } from "../Error/CathError";
  * @kind constructor
  */
 export class CodeClient {
-  constructor() {}
+  constructor() { }
   /**
    * Sends the link of the code
    * @return {Promise<CodeData>}
-   * @param {String} key
-   * @param {String} code
+   * @param {String} content
+   * @param {String} title
+   * @param {String} syntax
    */
-  public async createBin(key: String, code: String): Promise<CodeData> {
-    if (!key) throw new CathError("Missing 'key' property");
-    if (!code) throw new CathError("Missing 'code' property");
-    const data = await axios
-      .post(config.code, {
-        key,
-        value: code,
-      })
-      .then(res => res.data);
+  public async createBin(content: string, title: string, syntax: string): Promise<CodeData> {
+    if (!content) throw new CathError("Missing 'content' property");
+    if (!title) throw new CathError("Missing 'title' property");
+    if (!syntax) throw new CathError("Missing 'syntax' property");
+    const response = await fetch(config.bin, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content, title, syntax }),
+    });
+    const data = await response.json() as CodeData;
     if (data?.url) {
-      return data?.url;
+      return data;
     } else {
       throw new CathError(`Code already exist`);
     }

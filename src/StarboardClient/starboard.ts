@@ -5,10 +5,11 @@ import {
   Snowflake,
   TextChannel,
   Message,
-  MessageEmbed,
-  MessageOptions,
+  EmbedBuilder,
+  MessageCreateOptions,
   ColorResolvable,
   MessageEditOptions,
+  Colors,
 } from "discord.js";
 import {
   starMessageData,
@@ -24,7 +25,7 @@ export class StarboardClient {
 
   constructor(options: StarboardClientOptions) {
     this.client = options.client;
-    this.color = options.color || "RANDOM";
+    this.color = options.color || "Random";
     this.guilds = options.Guilds || [];
     this.client.on("ready", () => this.cacheData());
   }
@@ -75,24 +76,24 @@ export class StarboardClient {
   private getData(guildId: Snowflake): StarboardGuild {
     return this.guilds.find(x => x.id === guildId);
   }
-  private generateEdit(starCount: number, message: Message): MessageOptions {
+  private generateEdit(starCount: number, message: Message): MessageCreateOptions {
     return {
       content: `⭐ **${starCount}** ${message.channel}`,
       embeds: [
-        new MessageEmbed()
-          .setAuthor(
-            message.author.tag,
-            message.author.displayAvatarURL({ dynamic: true })
-          )
+        new EmbedBuilder()
+          .setAuthor({
+            name: message.author.tag,
+            iconURL: message.author.displayAvatarURL(),
+          })
           .setColor(this.color)
           .setDescription(
             `Content: ${message.content ? message.content : "None"}`
           )
-          .setThumbnail(message.author.displayAvatarURL({ dynamic: true }))
-          .addField("Message", `[Jump!](${message.url})`)
+          .setThumbnail(message.author.displayAvatarURL())
+          .addFields({ name: "Message", value: `[Jump!](${message.url})` })
           .setImage(message.attachments.first()?.url || null)
           .setTimestamp(message.createdTimestamp)
-          .setFooter(message.id),
+          .setFooter({ text: message.id }),
       ],
     };
   }

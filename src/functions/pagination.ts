@@ -1,7 +1,7 @@
-import { Message, MessageEmbed, User } from "discord.js";
+import { Message, EmbedBuilder, User, TextChannel } from "discord.js";
 export class Pagination {
-  constructor() {}
-  public chunk(arr, size: number) {
+  constructor() { }
+  public chunk(arr: any[], size: number) {
     const temp = [];
     for (let i = 0; i < arr.length; i += size) {
       temp.push(arr.slice(i, i + size));
@@ -14,12 +14,12 @@ export class Pagination {
   public async pagination(
     msg: Message,
     author: User,
-    contents: MessageEmbed,
+    contents: string[],
     init = true,
     currPage = 0
   ) {
     if (init) for (const emoji of this.paginationEmojis) await msg.react(emoji);
-    const filter = (reaction, user) => {
+    const filter = (reaction: any, user: User) => {
       return (
         this.paginationEmojis.includes(reaction.emoji.name) &&
         user.id === author.id
@@ -39,9 +39,9 @@ export class Pagination {
         if (emoji === this.paginationEmojis[2]) currPage++;
         currPage =
           ((currPage % contents.length) + contents.length) % contents.length;
-        const embed = msg.embeds[0]
-          .setDescription(contents[currPage])
-          .setFooter(`Page ${currPage + 1} of ${contents.length}`);
+        const embed = EmbedBuilder.from(msg.embeds[0]);
+        embed.setDescription(contents[currPage]);
+        embed.setFooter({ text: `Page ${currPage + 1} of ${contents.length}` });
         msg.edit({ embeds: [embed] });
         this.pagination(msg, author, contents, false, currPage);
       })

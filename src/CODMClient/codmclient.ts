@@ -1,4 +1,3 @@
-import axios from "axios";
 import { CathError } from "../Error/CathError";
 import { config } from "../";
 import { PerkData, ScorestreakData } from "./codmclient.interface";
@@ -19,29 +18,24 @@ export class CODMClient {
    * @param {String} name
    */
   public async getperk(name: string): Promise<PerkData> {
-    const data = await axios
-      .get(`${config.api}/api/v1/codm/perk?name=${name}`, {
-        headers: {
-          Authorization: this.key,
-        },
-      })
-      .then(res => res.data)
-      .catch(err => {
-        throw new CathError(`Unauthorized to use`);
-      });
+    const response = await fetch(`${config.api}/api/v1/codm/perk?name=${name}`, {
+      headers: {
+        Authorization: this.key,
+      },
+    });
+    const data = await response.json() as PerkData;
+    if (!response.ok) throw new CathError(`Unauthorized to use`);
     return data;
   }
+
   public async getscorestreak(name: string): Promise<ScorestreakData> {
-    const data = await axios
-      .get(`${config.api}/api/v1/codm/scorestreak?name=${name}`, {
-        headers: {
-          Authorization: this.key,
-        },
-      })
-      .then(res => res.data)
-      .catch(err => {
-        throw new CathError(`Unauthorized to use`);
-      });
+    const response = await fetch(`${config.api}/api/v1/codm/scorestreak?name=${name}`, {
+      headers: {
+        Authorization: this.key,
+      },
+    });
+    const data = await response.json() as ScorestreakData;
+    if (!response.ok) throw new CathError(`Unauthorized to use`);
     return data;
   }
 }

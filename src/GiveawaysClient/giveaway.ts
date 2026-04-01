@@ -3,12 +3,14 @@ import {
   Client,
   Snowflake,
   Message,
-  MessageActionRow,
-  MessageButton,
-  MessageEmbed,
+  ActionRowBuilder,
+  ButtonBuilder,
+  EmbedBuilder,
   TextChannel,
   GuildMember,
   ButtonInteraction,
+  ButtonStyle,
+  MessageActionRowComponentBuilder,
 } from "discord.js";
 import { CathError } from "../Error/CathError";
 import {
@@ -23,7 +25,7 @@ export class GiveawaysClient {
     "cath-invite",
     new Schema({
       User: { type: String, required: true },
-      Invites: { type: Object, required: true },
+      Invites: { type: Schema.Types.Mixed, required: true },
     })
   );
   public schema = model<GiveawaySchema>(
@@ -71,11 +73,11 @@ export class GiveawaysClient {
         default: 0,
       },
       Requirements: {
-        type: Object,
+        type: Schema.Types.Mixed,
         default: { Enabled: Boolean, Roles: [] },
       },
       Clickers: {
-        type: Array,
+        type: [String],
         default: [],
       },
     })
@@ -94,17 +96,14 @@ export class GiveawaysClient {
     this.client = options.client;
     this.MongooseConnectionURI = options.MongooseConnectionURI;
     mongoose
-      .connect(this.MongooseConnectionURI, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      })
+      .connect(this.MongooseConnectionURI)
       .then(() => console.log("Connected to Giveaway Database"))
       .catch(e => {
         throw new CathError(e);
       });
     this.client.on("interactionCreate", async interaction => {
       if (interaction.isButton()) {
-        let win = "" || [];
+        let win: any;
         let L = 0;
         let no = false;
         if (!interaction.guild) return;
@@ -232,13 +231,13 @@ export class GiveawaysClient {
                   `<@${win}>`
                 ),
                 components: [
-                  new MessageActionRow().addComponents([
-                    new MessageButton()
+                  new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents([
+                    new ButtonBuilder()
                       .setLabel("Giveaway")
                       .setURL(
                         `https://discord.com/channels/${interaction.guild.id}/${interaction.channel.id}/${interaction.message.id}`
                       )
-                      .setStyle("LINK"),
+                      .setStyle(ButtonStyle.Link),
                   ]),
                 ],
               });
@@ -262,20 +261,20 @@ export class GiveawaysClient {
   }
 
   private getButtons(host: string) {
-    const reroll = new MessageButton()
+    const reroll = new ButtonBuilder()
       .setLabel("Reroll")
-      .setStyle("SECONDARY")
+      .setStyle(ButtonStyle.Secondary)
       .setCustomId(`greroll_${host}`)
       .setDisabled(true);
 
-    const end = new MessageButton()
+    const end = new ButtonBuilder()
       .setLabel("End")
-      .setStyle("DANGER")
+      .setStyle(ButtonStyle.Danger)
       .setCustomId(`gend_${host}`);
 
-    const enter = new MessageButton()
+    const enter = new ButtonBuilder()
       .setLabel("Enter")
-      .setStyle("SUCCESS")
+      .setStyle(ButtonStyle.Success)
       .setCustomId(`genter_${host}`);
 
     const b = [enter, end, reroll];
@@ -331,16 +330,16 @@ export class GiveawaysClient {
         .channels.cache.get(data.Channel) as TextChannel
     ).messages.fetch(data.Message);
     const bs = await this.getButtons(data.HostBy);
-    bs.find(x => x.label == "Enter")
-      .setDisabled()
-      .setStyle("SECONDARY");
-    bs.find(x => x.label == "End")
-      .setDisabled()
-      .setStyle("SECONDARY");
-    bs.find(x => x.label == "Reroll")
+    bs.find(x => (x.data as any).label == "Enter")
+      .setDisabled(true)
+      .setStyle(ButtonStyle.Secondary);
+    bs.find(x => (x.data as any).label == "End")
+      .setDisabled(true)
+      .setStyle(ButtonStyle.Secondary);
+    bs.find(x => (x.data as any).label == "Reroll")
       .setDisabled(false)
-      .setStyle("SUCCESS");
-    const row = new MessageActionRow().addComponents(bs);
+      .setStyle(ButtonStyle.Success);
+    const row = new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(bs);
     m.edit({
       components: [row],
       embeds: m.embeds,
@@ -366,11 +365,10 @@ export class GiveawaysClient {
       req += `\n Weekly Amari: \`${requirements.weeklyamari}\``;
     if (requirements.amarilevel)
       req += `\n Amari Level: \`${requirements.amarilevel}\``;
-    const embed = new MessageEmbed()
+    const embed = new EmbedBuilder()
       .setTitle(`Status: ${status}! 🎉`)
       .setDescription(
-        `${
-          this.GiveawayMessages.toParticipate
+        `${this.GiveawayMessages.toParticipate
         }\n${this.GiveawayMessages.giveawayDescription
           .replace(/{invites}/g, invites ? invites : "0")
           .replace(/{requirements}/g, req)
@@ -379,7 +377,7 @@ export class GiveawaysClient {
           .replace(/{winners}/g, winners)
           .replace(/{totalParticipants}/g, "0")}`
       )
-      .setColor("RANDOM")
+      .setColor("Random")
       .setFooter({
         text: "Ends",
         iconURL: this.GiveawayMessages.giveawayFooterImage,
@@ -422,7 +420,7 @@ export class GiveawaysClient {
     const status = "In Progress";
     const msg = await (client.channels.cache.get(Channel) as TextChannel).send({
       content: this.GiveawayMessages.giveaway,
-      components: [new MessageActionRow().addComponents(this.getButtons(host))],
+      components: [new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(this.getButtons(host))],
       embeds: [
         await this.giveawayEmbed(client, status, {
           host,
@@ -470,17 +468,17 @@ export class GiveawaysClient {
         });
         data.Ended = true;
         data.save();
-        const embed = msg.embeds[0];
-        embed.description = this.replacePlaceholders(
+        const embed = EmbedBuilder.from(msg.embeds[0]);
+        embed.setDescription(this.replacePlaceholders(
           this.GiveawayMessages.giveawayDescription,
           data,
           msg
-        );
+        ));
         msg.edit({ embeds: [embed] });
         this.editButtons(message.client, data);
         return "NO_WINNERS";
       }
-      message.channel.send({
+      (message.channel as TextChannel).send({
         content: this.replacePlaceholders(
           this.GiveawayMessages.winMessage,
           await this.getByMessage(data.Message),
@@ -490,7 +488,7 @@ export class GiveawaysClient {
       });
 
       if (this.GiveawayMessages.dmWinner) {
-        const dmEmbed = new MessageEmbed()
+        const dmEmbed = new EmbedBuilder()
           .setTitle("You Won!")
           .setDescription(
             this.replacePlaceholders(
@@ -500,22 +498,22 @@ export class GiveawaysClient {
               winners as []
             )
           )
-          .setColor("RANDOM")
+          .setColor("Random")
           .setTimestamp()
-          .setThumbnail(msg.guild.iconURL({ dynamic: true }))
+          .setThumbnail(msg.guild.iconURL())
           .setFooter({ text: "Made by Cath Team" });
         (winners as []).forEach(user => {
           message.guild.members.cache.get(user).send({ embeds: [dmEmbed] });
         });
       }
 
-      const embed = msg.embeds[0];
-      embed.description = this.replacePlaceholders(
+      const embed = EmbedBuilder.from(msg.embeds[0]);
+      embed.setDescription(this.replacePlaceholders(
         this.GiveawayMessages.giveawayDescription,
         data,
         msg,
         winners as []
-      );
+      ));
       msg.edit({ embeds: [embed] }).catch(err => console.log(err));
       data.Ended = true;
       data.save().catch(err => {
@@ -527,9 +525,9 @@ export class GiveawaysClient {
   private gotoGiveaway(data) {
     if (!data) throw new CathError("Missing 'data'");
     const link = `https://discord.com/channels/${data.Guild}/${data.Channel}/${data.Message}`;
-    const button = new MessageButton()
+    const button = new ButtonBuilder()
       .setLabel("Giveaway")
-      .setStyle("LINK")
+      .setStyle(ButtonStyle.Link)
       .setURL(link);
     return button;
   }
@@ -572,23 +570,23 @@ export class GiveawaysClient {
     ).messages.fetch(data.Message);
 
     if (!winners) {
-      message.channel.send(
+      (message.channel as TextChannel).send(
         this.replacePlaceholders(this.GiveawayMessages.noWinner, newData, msg)
       );
       data.Ended = true;
       await data.save();
-      const embed = giveawaymsg.embeds[0];
-      embed.description = this.replacePlaceholders(
+      const embed = EmbedBuilder.from(giveawaymsg.embeds[0]);
+      embed.setDescription(this.replacePlaceholders(
         this.GiveawayMessages.giveawayDescription,
         newData,
         msg
-      );
-      embed.title = "Status: Ended! 🎉";
+      ));
+      embed.setTitle("Status: Ended! 🎉");
       giveawaymsg.edit({ embeds: [embed] }).catch(err => console.log(err));
       this.editButtons(message.client, data);
       return "NO_WINNERS";
     }
-    message.channel.send(
+    (message.channel as TextChannel).send(
       this.replacePlaceholders(
         this.GiveawayMessages.winMessage,
         newData,
@@ -597,7 +595,7 @@ export class GiveawaysClient {
       )
     );
     if (this.GiveawayMessages.dmWinner) {
-      const dmEmbed = new MessageEmbed()
+      const dmEmbed = new EmbedBuilder()
         .setTitle("You Won!")
         .setDescription(
           this.replacePlaceholders(
@@ -607,9 +605,9 @@ export class GiveawaysClient {
             winners as []
           )
         )
-        .setColor("RANDOM")
+        .setColor("Random")
         .setTimestamp()
-        .setThumbnail(msg.guild.iconURL({ dynamic: true }))
+        .setThumbnail(msg.guild.iconURL())
         .setFooter({ text: "Made by Cath Team" });
       (winners as []).forEach(user => {
         message.guild.members.cache
@@ -619,14 +617,14 @@ export class GiveawaysClient {
       });
     }
 
-    const embed = giveawaymsg.embeds[0];
-    embed.description = this.replacePlaceholders(
+    const embed = EmbedBuilder.from(giveawaymsg.embeds[0]);
+    embed.setDescription(this.replacePlaceholders(
       this.GiveawayMessages.giveawayDescription,
       data,
       msg,
       winners as []
-    );
-    embed.title = "Status: Ended! 🎉";
+    ));
+    embed.setTitle("Status: Ended! 🎉");
     giveawaymsg.edit({ embeds: [embed] }).catch(err => console.log(err));
     data.Ended = true;
     data.save().catch(err => {
@@ -643,12 +641,12 @@ export class GiveawaysClient {
         .get(data.Guild)
         .channels.cache.get(data.Channel) as TextChannel
     ).messages.fetch(Message);
-    const embed = message.embeds[0];
-    embed.title = "Status: Rerolled! 🎉";
+    const embed = EmbedBuilder.from(message.embeds[0]);
+    embed.setTitle("Status: Rerolled! 🎉");
     message.edit({ embeds: [embed] }).catch(err => console.log(err));
     const chosen = await this.choose(1, Message, message);
     if (!chosen) return [];
-    const dmEmbed = new MessageEmbed()
+    const dmEmbed = new EmbedBuilder()
       .setTitle("You Won!")
       .setDescription(
         this.replacePlaceholders(
@@ -658,9 +656,9 @@ export class GiveawaysClient {
           chosen as []
         )
       )
-      .setColor("RANDOM")
+      .setColor("Random")
       .setTimestamp()
-      .setThumbnail(msg.guild.iconURL({ dynamic: true }))
+      .setThumbnail(msg.guild.iconURL())
       .setFooter({ text: "Made by Cath Team" });
     (chosen as []).forEach(user => {
       client.users.cache.get(user).send({ embeds: [dmEmbed] });
@@ -677,11 +675,11 @@ export class GiveawaysClient {
       setTimeout(async () => {
         data.forEach(async e => {
           const guild = await client.guilds.fetch(e.Guild);
-          if (!guild) await e.delete();
+          if (!guild) await e.deleteOne();
           const channel = guild.channels.cache.get(e.Channel) as TextChannel;
-          if (!channel) await e.delete();
+          if (!channel) await e.deleteOne();
           const msg = await channel.messages.fetch(e.Message).catch();
-          if (!msg) await e.delete();
+          if (!msg) await e.deleteOne();
           this.startTimer(msg, e);
         });
       }, 10000);
@@ -698,22 +696,21 @@ export class GiveawaysClient {
           if (!channel) return;
           const msg = await channel.messages.fetch(docs[i].Message);
           if (!msg) return;
-          const embed = msg.embeds[0];
+          const embed = EmbedBuilder.from(msg.embeds[0]);
           const req = docs[i].Requirements.Enabled
             ? docs[i].Requirements.Roles.map(x => `<@&${x}>`).join(", ")
             : "None!";
-          embed.description = `${
-            this.GiveawayMessages.toParticipate
-          }\n${this.GiveawayMessages.giveawayDescription
-            .replace(/{invites}/g, docs[i].Invites.toString())
-            .replace(/{requirements}/g, req)
-            .replace(/{hostedBy}/g, `<@!${docs[i].HostBy}>`)
-            .replace(/{award}/g, docs[i].Award)
-            .replace(/{winners}/g, docs[i].Winners.toString())
-            .replace(
-              /{totalParticipants}/g,
-              docs[i].Clickers.length.toString()
-            )}`;
+          embed.setDescription(`${this.GiveawayMessages.toParticipate
+            }\n${this.GiveawayMessages.giveawayDescription
+              .replace(/{invites}/g, docs[i].Invites.toString())
+              .replace(/{requirements}/g, req)
+              .replace(/{hostedBy}/g, `<@!${docs[i].HostBy}>`)
+              .replace(/{award}/g, docs[i].Award)
+              .replace(/{winners}/g, docs[i].Winners.toString())
+              .replace(
+                /{totalParticipants}/g,
+                docs[i].Clickers.length.toString()
+              )}`);
           msg.edit({ embeds: [embed] });
         }
       }, 10 * 1000);
@@ -749,7 +746,7 @@ export class GiveawaysClient {
         /{winners}/g,
         winners.length > 0
           ? winners.map(winner => `<@${winner}>`).join(", ")
-          : "None" || "None"
+          : "None"
       );
     return newString;
   }

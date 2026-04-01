@@ -1,5 +1,4 @@
 import { CathError } from "../Error/CathError";
-import axios from "axios";
 /**
  * Start a Discord Activity session
  * @example 
@@ -38,25 +37,25 @@ export async function DiscordActivity(options: DiscordActivityOptions) {
   if (!options.channel_id) {
     throw new CathError("Missing 'Channel ID'");
   }
-  const data = await axios
-    .post(
-      `https://discord.com/api/v9/channels/${options.channel_id}/invites`,
-      {
+  const response = await fetch(
+    `https://discord.com/api/v9/channels/${options.channel_id}/invites`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bot ${options.token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
         max_age: 86400,
         max_uses: 0,
         target_application_id: all[options.application],
         target_type: 2,
         temporary: false,
         validate: null,
-      },
-      {
-        headers: {
-          Authorization: `Bot ${options.token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    )
-    .then(res => res.data);
+      }),
+    }
+  );
+  const data = await response.json() as { code: string };
   return `https://discord.com/invite/${data.code}`;
 }
 export interface DiscordActivityOptions {
